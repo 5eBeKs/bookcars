@@ -262,6 +262,7 @@ const Checkout = () => {
       //
       let _customerId: string | undefined
       let _sessionId: string | undefined
+      let _clientSecret: string | null = null
       if (!payLater) {
         if (env.PAYMENT_GATEWAY === bookcarsTypes.PaymentGateway.Stripe) {
           const name = bookcarsHelper.truncateString(`${env.WEBSITE_NAME} - ${car.name}`, StripeService.ORDER_NAME_MAX_LENGTH)
@@ -278,7 +279,7 @@ const Checkout = () => {
             customerName: (!authenticated ? driver?.fullName : user?.fullName) as string,
           }
           const res = await StripeService.createCheckoutSession(payload)
-          setClientSecret(res.clientSecret)
+          _clientSecret = res.clientSecret
           _sessionId = res.sessionId
           _customerId = res.customerId
         } else {
@@ -308,6 +309,9 @@ const Checkout = () => {
       if (status === 200) {
         setBookingId(_bookingId)
         setSessionId(_sessionId)
+        // Show the Stripe payment form only once the booking exists,
+        // otherwise the customer could pay for a booking that was rejected
+        setClientSecret(_clientSecret)
         if (payLater) {
           setVisible(false)
           setSuccess(true)
